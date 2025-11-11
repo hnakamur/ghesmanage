@@ -122,7 +122,7 @@ func (c *APIClient) GetConfigApplyStatus(ctx context.Context, runID string) (*Co
 	var requestURL string
 	{
 		u := c.urlForPath("/v1/config/apply")
-		u.RawQuery = "runID=" + url.QueryEscape(runID)
+		u.RawQuery = "run_id=" + url.QueryEscape(runID)
 		requestURL = u.String()
 	}
 	resp, err := c.sendRequest(ctx, method, requestURL, nil)
