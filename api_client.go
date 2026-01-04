@@ -78,10 +78,27 @@ func (c *APIClient) SetCertificateAndKey(ctx context.Context, cert, key string) 
 	return nil
 }
 
-func (c *APIClient) TriggerConfigApply(ctx context.Context) (runID string, err error) {
+// TriggerConfigApply trigers a ghe-config-apply-run.
+// If runID is empty, a run ID will be generated randomly at the server.
+func (c *APIClient) TriggerConfigApply(ctx context.Context, runID string) (returnedRunID string, err error) {
 	method := http.MethodPost
 	requestURL := c.urlForPath("/v1/config/apply").String()
-	resp, err := c.sendRequest(ctx, method, requestURL, nil)
+
+	type RunIDObj struct {
+		RunID string `json:"run_id"`
+	}
+
+	var reqBody io.Reader
+	if runID != "" {
+		runIDObj := RunIDObj{RunID: runID}
+		runIDObjBytes, err := json.Marshal(runIDObj)
+		if err != nil {
+			return "", fmt.Errorf("marshal run_id JSON: %s", err)
+		}
+		reqBody = bytes.NewReader(runIDObjBytes)
+	}
+
+	resp, err := c.sendRequest(ctx, method, requestURL, reqBody)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request:%s %s, err:%s",
 			method, requestURL, err)
