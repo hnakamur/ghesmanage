@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+// APIClient is a client for Manage GitHub Enterprise Server API.
 type APIClient struct {
 	httpClient        *http.Client
 	manageEndpointURL *url.URL
@@ -22,6 +23,9 @@ type APIClient struct {
 	password          string
 }
 
+// NewAPIClient creates a client for Manage GitHub Enterprise Server API.
+// See https://docs.github.com/ja/enterprise-server@3.17/rest/enterprise-admin/manage-ghes?apiVersion=2022-11-28#authentication
+// for managementEndpoint, user, and password.
 func NewAPIClient(httpClient *http.Client, managementEndpoint, user, password string) (*APIClient, error) {
 	manageEndpointURL, err := url.Parse(managementEndpoint)
 	if err != nil {
@@ -54,6 +58,8 @@ func newCertificateSetRequestBody(cert, key string) ghesSettings {
 	}
 }
 
+// SetCertificateAndKey sets the certificate and the key.
+// You need to call TriggerConfigApply after this.
 func (c *APIClient) SetCertificateAndKey(ctx context.Context, cert, key string) error {
 	reqBodyBytes, err := json.Marshal(newCertificateSetRequestBody(cert, key))
 	if err != nil {
@@ -121,12 +127,14 @@ func (c *APIClient) TriggerConfigApply(ctx context.Context, runID string) (retur
 	return respObj.RunID, nil
 }
 
+// ConfigApplyStatus is the response object from GetConfigApplyStatus.
 type ConfigApplyStatus struct {
 	Running    bool                    `json:"running"`
 	Successful bool                    `json:"successful"`
 	Nodes      []ConfigApplyStatusNode `json:"nodes"`
 }
 
+// ConfigApplyStatusNode is a node object in ConfigApplyStatus.
 type ConfigApplyStatusNode struct {
 	RunID      string `json:"run_id"`
 	Hostname   string `json:"hostname"`
@@ -134,6 +142,7 @@ type ConfigApplyStatusNode struct {
 	Successful bool   `json:"successful"`
 }
 
+// GetConfigApplyStatus gets the ghe-config-apply-run status for the specified runID.
 func (c *APIClient) GetConfigApplyStatus(ctx context.Context, runID string) (*ConfigApplyStatus, error) {
 	method := http.MethodGet
 	var requestURL string
@@ -163,6 +172,7 @@ func (c *APIClient) GetConfigApplyStatus(ctx context.Context, runID string) (*Co
 	return &status, nil
 }
 
+// GetCertificateAndKey gets the certificate and the key.
 func (c *APIClient) GetCertificateAndKey(ctx context.Context) (cert, key string, err error) {
 	respBody, err := c.GetSettings(ctx)
 	if err != nil {
@@ -176,6 +186,7 @@ func (c *APIClient) GetCertificateAndKey(ctx context.Context) (cert, key string,
 	return settings.GithubSSL.Cert, settings.GithubSSL.Key, nil
 }
 
+// GetSettings gets the settings.
 func (c *APIClient) GetSettings(ctx context.Context) (respBody []byte, err error) {
 	method := http.MethodGet
 	requestURL := c.urlForPath("/v1/config/settings").String()
