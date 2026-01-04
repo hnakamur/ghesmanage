@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -95,6 +96,7 @@ func (c *APIClient) TriggerConfigApply(ctx context.Context) (runID string, err e
 	}
 
 	respBody, _ := io.ReadAll(resp.Body)
+	slog.Debug("ghesmanage.TriggerConfigApply", "status", resp.StatusCode, "respBody", string(respBody))
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("unexpected status code: %d (%s), response body: %s, request:%s %s",
 			resp.StatusCode, resp.Status, strings.TrimSpace(string(respBody)), method, requestURL)
@@ -142,6 +144,7 @@ func (c *APIClient) GetConfigApplyStatus(ctx context.Context, runID string) (*Co
 	}
 
 	respBody, _ := io.ReadAll(resp.Body)
+	slog.Debug("ghesmanage.GetConfigApplyStatus", "runID", runID, "status", resp.StatusCode, "respBody", string(respBody))
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d (%s), response body: %s, request:%s %s",
 			resp.StatusCode, resp.Status, strings.TrimSpace(string(respBody)), method, requestURL)
